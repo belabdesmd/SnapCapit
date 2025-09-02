@@ -14,6 +14,25 @@
     "dir": "dist/server",
     "entry": "index.cjs"
   },
+  "menu": {
+    "items": [
+      {
+        "endpoint": "/internal/menu/create-post/moderator",
+        "forUserType": "moderator",
+        "label": "Upload Image to Caption",
+        "location": "subreddit"
+      },
+      {
+        "endpoint": "/internal/menu/create-post/user",
+        "forUserType": "user",
+        "label": "Upload Image to Caption",
+        "location": "post"
+      }
+    ]
+  },
+  "forms": {
+    "createPostForm": "/internal/form/create-post"
+  },
   "media": {},
   "permissions": {
     "http": {
