@@ -1,7 +1,13 @@
 import express from 'express';
-import { InitResponse, IncrementResponse, DecrementResponse } from '../shared/types/api';
-import { redis, reddit, createServer, context, getServerPort } from '@devvit/web/server';
-import { createPost } from './core/post';
+import {
+  redis,
+  reddit,
+  createServer,
+  context,
+  getServerPort,
+} from '@devvit/web/server';
+import { PostsServices } from './core/posts.services';
+import { CaptionsServices } from './core/captions.services';
 
 const app = express();
 
@@ -14,112 +20,173 @@ app.use(express.text());
 
 const router = express.Router();
 
-router.get<{ postId: string }, InitResponse | { status: string; message: string }>(
-  '/api/init',
-  async (_req, res): Promise<void> => {
-    const { postId } = context;
-
-    if (!postId) {
-      console.error('API Init Error: postId not found in devvit context');
-      res.status(400).json({
-        status: 'error',
-        message: 'postId is required but missing from context',
-      });
-      return;
-    }
-
-    try {
-      const [count, username] = await Promise.all([
-        redis.get('count'),
-        reddit.getCurrentUsername(),
-      ]);
-
-      res.json({
-        type: 'init',
-        postId: postId,
-        count: count ? parseInt(count) : 0,
-        username: username ?? 'anonymous',
-      });
-    } catch (error) {
-      console.error(`API Init Error for post ${postId}:`, error);
-      let errorMessage = 'Unknown error during initialization';
-      if (error instanceof Error) {
-        errorMessage = `Initialization failed: ${error.message}`;
-      }
-      res.status(400).json({ status: 'error', message: errorMessage });
-    }
-  }
-);
-
-router.post<{ postId: string }, IncrementResponse | { status: string; message: string }, unknown>(
-  '/api/increment',
-  async (_req, res): Promise<void> => {
-    const { postId } = context;
-    if (!postId) {
-      res.status(400).json({
-        status: 'error',
-        message: 'postId is required',
-      });
-      return;
-    }
-
-    res.json({
-      count: await redis.incrBy('count', 1),
-      postId,
-      type: 'increment',
-    });
-  }
-);
-
-router.post<{ postId: string }, DecrementResponse | { status: string; message: string }, unknown>(
-  '/api/decrement',
-  async (_req, res): Promise<void> => {
-    const { postId } = context;
-    if (!postId) {
-      res.status(400).json({
-        status: 'error',
-        message: 'postId is required',
-      });
-      return;
-    }
-
-    res.json({
-      count: await redis.incrBy('count', -1),
-      postId,
-      type: 'decrement',
-    });
-  }
-);
-
-router.post('/internal/on-app-install', async (_req, res): Promise<void> => {
+// Get current user's username
+router.get('/api/username', async (_req, res): Promise<void> => {
   try {
-    const post = await createPost();
+    const username = await reddit.getCurrentUsername();
 
-    res.json({
-      status: 'success',
-      message: `Post created in subreddit ${context.subredditName} with id ${post.id}`,
-    });
+    if (!username) {
+      res.status(404).json({
+        status: 'error',
+        message: 'Username not found',
+      });
+      return;
+    }
+
+    res.json({ status: 'success', username: username });
   } catch (error) {
-    console.error(`Error creating post: ${error}`);
-    res.status(400).json({
+    console.error('Error getting username:', error);
+    res.status(500).json({
       status: 'error',
-      message: 'Failed to create post',
+      message: 'Failed to get username',
     });
   }
 });
 
-router.post('/internal/menu/post-create', async (_req, res): Promise<void> => {
+// Create a new caption
+router.post('/api/captions/create', async (req, res): Promise<void> => {
+  const caption = req.body;
   try {
-    const post = await createPost();
+    const { postId } = context;
+
+    if (!postId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Post ID is required',
+      });
+      return;
+    }
+
+    const createdCaption = await CaptionsServices.createCaption(redis, postId, caption);
 
     res.json({
-      navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${post.id}`,
+      status: 'success',
+      caption: createdCaption,
     });
   } catch (error) {
-    console.error(`Error creating post: ${error}`);
-    res.status(400).json({
+    console.error('Error creating caption:', error);
+    res.status(500).json({
       status: 'error',
-      message: 'Failed to create post',
+      message: error instanceof Error ? error.message : 'Failed to create caption',
+    });
+  }
+});
+
+// Upvote a caption
+router.post('/api/captions/:captionId/upvote', async (req, res): Promise<void> => {
+  try {
+    const { captionId } = req.params;
+    const { postId } = context;
+    const username = await reddit.getCurrentUsername();
+
+    if (!postId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Post ID is required',
+      });
+      return;
+    }
+
+    if (!username) {
+      res.status(401).json({
+        status: 'error',
+        message: 'User not authenticated',
+      });
+      return;
+    }
+
+    if (!captionId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Caption ID is required',
+      });
+      return;
+    }
+
+    const userUpvoted = await CaptionsServices.upvoteCaption(redis, postId, captionId, username);
+
+    res.json({
+      status: 'success',
+      userUpvoted,
+    });
+  } catch (error) {
+    console.error('Error upvoting caption:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to upvote caption',
+    });
+  }
+});
+
+// Get all captions with upvote information
+router.get('/api/captions', async (_req, res): Promise<void> => {
+  try {
+    const { postId } = context;
+    const username = await reddit.getCurrentUsername();
+
+    if (!postId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Post ID is required',
+      });
+      return;
+    }
+
+    if (!username) {
+      res.status(401).json({
+        status: 'error',
+        message: 'User not authenticated',
+      });
+      return;
+    }
+
+    const captions = await CaptionsServices.getCaptionsWithUpvotes(redis, postId, username);
+
+    res.json({
+      status: 'success',
+      captions,
+    });
+  } catch (error) {
+    console.error('Error getting captions:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get captions',
+    });
+  }
+});
+
+// Get post image URL
+router.get('/api/post/image', async (_req, res): Promise<void> => {
+  try {
+    const { postId } = context;
+
+    if (!postId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Post ID is required',
+      });
+      return;
+    }
+
+    const post = await PostsServices.getPost(redis, postId);
+
+    if (!post) {
+      res.status(404).json({
+        status: 'error',
+        message: 'Post not found',
+      });
+      return;
+    }
+
+    res.json({
+      status: 'success',
+      imageUrl: post.imageUrl,
+    });
+  } catch (error) {
+    console.error('Error getting post image:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get post image',
     });
   }
 });
@@ -132,4 +199,4 @@ const port = getServerPort();
 
 const server = createServer(app);
 server.on('error', (err) => console.error(`server error; ${err.stack}`));
-server.listen(port);
+server.listen(port, () => console.log(`http://localhost:${port}`));
