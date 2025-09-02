@@ -5,7 +5,8 @@
     "dir": "dist/client",
     "entrypoints": {
       "default": {
-        "entry": "index.html"
+        "entry": "index.html",
+        "height": "tall"
       }
     }
   },
@@ -14,18 +15,13 @@
     "entry": "index.cjs"
   },
   "media": {},
-  "menu": {
-    "items": [
-      {
-        "label": "Create a new post",
-        "description": "upcapit",
-        "location": "subreddit",
-        "forUserType": "moderator",
-        "endpoint": "/internal/menu/post-create"
-      }
-    ]
-  },
-  "triggers": {
-    "onAppInstall": "/internal/on-app-install"
+  "permissions": {
+    "http": {
+      "domains": ["generatecaption-o2ufdr3m5a-uc.a.run.app"],
+      "enable": true
+    },
+    "media": true,
+    "redis": true,
+    "reddit": true
   }
 }
