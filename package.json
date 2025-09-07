@@ -1,7 +1,7 @@
 {
   "private": true,
-  "name": "upcapit",
-  "version": "0.0.0",
+  "name": "snapcap",
+  "version": "1.0.0",
   "license": "BSD-3-Clause",
   "type": "module",
   "scripts": {
