@@ -1,6 +1,6 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
-  "name": "snapcap",
+  "name": "snapcapit",
   "post": {
     "dir": "dist/client",
     "entrypoints": {
@@ -54,12 +54,16 @@
   },
   "permissions": {
     "http": {
-      "domains": ["snapcap.belfodil.me"],
+      "domains": [
+        "snapcap.belfodil.me"
+      ],
       "enable": true
     },
     "media": true,
     "redis": true,
-    "reddit": true
+    "reddit": {
+      "enable": true
+    }
   },
   "media": {}
 }
