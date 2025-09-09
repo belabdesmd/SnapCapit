@@ -33,14 +33,33 @@
   "forms": {
     "createPostForm": "/internal/form/create-post"
   },
-  "media": {},
+  "settings": {
+    "global": {
+      "API_KEY": {
+        "type": "string",
+        "label": "Backend API Key",
+        "isSecret": true
+      }
+    }
+  },
+  "triggers": {
+    "onPostDelete": "/internal/trigger/post-delete"
+  },
+  "scheduler": {
+    "tasks": {
+      "post-best-captions": {
+        "endpoint": "/internal/job/post-best-captions"
+      }
+    }
+  },
   "permissions": {
     "http": {
-      "domains": ["generatecaption-o2ufdr3m5a-uc.a.run.app"],
+      "domains": ["snapcap.belfodil.me"],
       "enable": true
     },
     "media": true,
     "redis": true,
     "reddit": true
-  }
+  },
+  "media": {}
 }
