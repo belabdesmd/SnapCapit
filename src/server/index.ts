@@ -1,7 +1,8 @@
 import express from 'express';
-import { redis, reddit, createServer, context, getServerPort } from '@devvit/web/server';
+import { redis, createServer, context, getServerPort } from '@devvit/web/server';
 import { scheduler } from '@devvit/web/server';
 import { settings } from '@devvit/web/server';
+import { reddit } from '@devvit/reddit';
 import { media } from '@devvit/media';
 import { UiResponse } from '@devvit/web/shared';
 import { PostsServices } from './core/posts.services';
