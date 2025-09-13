@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "snapcapit",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "BSD-3-Clause",
   "type": "module",
   "scripts": {
@@ -13,7 +13,7 @@
     "deploy": "npm run build && devvit upload",
     "dev": "concurrently -k -p \"[{name}]\" -n \"CLIENT,SERVER,DEVVIT\" -c \"blue,green,magenta\" \"npm run dev:client\" \"npm run dev:server\" \"npm run dev:devvit\"",
     "dev:client": "cd src/client && vite build --watch",
-    "dev:devvit": "devvit playtest r/Doularkos",
+    "dev:devvit": "devvit playtest",
     "dev:server": "cd src/server && vite build --watch",
     "dev:vite": "cd src/client && vite --port 7474",
     "lint": "eslint ./src",
@@ -26,6 +26,7 @@
   "dependencies": {
     "@devvit/web": "0.12.0",
     "clsx": "2.1.1",
+    "devvit": "^0.12.0",
     "express": "5.1.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -50,7 +51,7 @@
     "tailwindcss": "4.1.6",
     "typescript": "5.8.3",
     "typescript-eslint": "8.29.0",
-    "vite": "6.3.4",
+    "vite": "^6.3.6",
     "vitest": "3.1.1"
   }
 }

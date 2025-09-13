@@ -1,6 +1,6 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
-  "name": "snapcapit",
+  "name": "snap-cap-it",
   "post": {
     "dir": "dist/client",
     "entrypoints": {
@@ -64,6 +64,5 @@
     "reddit": {
       "enable": true
     }
-  },
-  "media": {}
+  }
 }
