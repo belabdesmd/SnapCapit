@@ -60,8 +60,8 @@ const DUMMY_DATA = {
 
 // Responsive sizing constants
 const BASE_FONT_SIZE_VW = (32 / 700) * 100;
-const MIN_HEIGHT_1_LINE_VW = (52 / 700) * 100; // Increased for better spacing
-const MIN_HEIGHT_2_LINES_VW = (84 / 700) * 100; // Increased for better spacing
+const MIN_HEIGHT_1_LINE_VW = (42 / 700) * 100; // Increased for better spacing
+const MIN_HEIGHT_2_LINES_VW = (74 / 700) * 100; // Increased for better spacing
 const BANNER_PADDING_VW = (20 / 700) * 100; // Consistent padding
 
 export const CaptionEditor: React.FC = () => {
@@ -192,6 +192,7 @@ export const CaptionEditor: React.FC = () => {
 
   const checkTextOverflow = (textArea: HTMLTextAreaElement): { hit2Lines?: boolean; overflown: boolean } => {
     if (!textArea) return { overflown: false };
+    textArea.style.height = "auto";
 
     const computedStyle = getComputedStyle(textArea);
     const lineHeight = parseFloat(computedStyle.lineHeight);
@@ -200,8 +201,9 @@ export const CaptionEditor: React.FC = () => {
     const maxHeight = actualLineHeight * 3;
 
     const currentHeight = textArea.scrollHeight;
+
     return {
-      hit2Lines: currentHeight > actualLineHeight * 2,
+      hit2Lines: currentHeight > Math.round(actualLineHeight * 2),
       overflown: currentHeight > maxHeight,
     };
   };
@@ -439,19 +441,6 @@ export const CaptionEditor: React.FC = () => {
     return `${MIN_HEIGHT_1_LINE_VW + BANNER_PADDING_VW}vw`;
   };
 
-  const getTextAreaHeight = (text: string, textAreaRef?: React.RefObject<HTMLTextAreaElement | null>) => {
-    if (!text) return `${MIN_HEIGHT_1_LINE_VW}vw`;
-
-    if (textAreaRef?.current) {
-      const lineStatus = checkTextOverflow(textAreaRef.current);
-      return lineStatus.hit2Lines ? `${MIN_HEIGHT_2_LINES_VW}vw` : `${MIN_HEIGHT_1_LINE_VW}vw`;
-    }
-
-    const estimatedCharsPerLine = Math.floor(window.innerWidth / (((BASE_FONT_SIZE_VW * window.innerWidth) / 100) * 0.6));
-    const estimatedLines = Math.ceil(text.length / estimatedCharsPerLine);
-    return estimatedLines > 1 ? `${MIN_HEIGHT_2_LINES_VW}vw` : `${MIN_HEIGHT_1_LINE_VW}vw`;
-  };
-
   const getExtensionBgColor = (position: 'top' | 'bottom') => {
     const isWhite = position === 'top'
       ? (isCreatingMode ? newCaption.topExtensionWhite : currentCaption?.topExtensionWhite)
@@ -522,7 +511,7 @@ export const CaptionEditor: React.FC = () => {
                   disabled={!isCreatingMode}
                   style={{
                     ...getTextStyle(),
-                    height: getTextAreaHeight(getInputValue('topExtended'), topExtendedTextRef),
+                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     minHeight: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     padding: `${BANNER_PADDING_VW / 2}vw 2vw`,
                     display: 'flex',
@@ -578,7 +567,7 @@ export const CaptionEditor: React.FC = () => {
                   style={{
                     ...getTextStyle(),
                     textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                    height: getTextAreaHeight(getInputValue('top'), topTextRef),
+                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     minHeight: isCreatingMode ? `${MIN_HEIGHT_1_LINE_VW}vw` : 'auto',
                   }}
                 />
@@ -600,7 +589,7 @@ export const CaptionEditor: React.FC = () => {
                   style={{
                     ...getTextStyle(),
                     textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                    height: getTextAreaHeight(getInputValue('bottom'), bottomTextRef),
+                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     minHeight: isCreatingMode ? `${MIN_HEIGHT_1_LINE_VW}vw` : 'auto',
                   }}
                 />
@@ -658,7 +647,7 @@ export const CaptionEditor: React.FC = () => {
                   disabled={!isCreatingMode}
                   style={{
                     ...getTextStyle(),
-                    height: getTextAreaHeight(getInputValue('bottomExtended'), bottomExtendedTextRef),
+                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     minHeight: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     padding: `${BANNER_PADDING_VW / 2}vw 2vw`,
                     display: 'flex',
