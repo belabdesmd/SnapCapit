@@ -479,15 +479,6 @@ export const CaptionEditor: React.FC = () => {
 
   return (
     <div className="h-screen bg-[#0B1416] text-white flex flex-col">
-      {error && (
-        <div className="bg-red-600 text-white px-4 py-2 text-center text-sm sm:text-base">
-          {error}
-          <button className="ml-4 underline" onClick={() => setError('')}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
       <div className="flex-1 flex flex-col">
         {/* Top Extension - Create Mode */}
         {isCreatingMode && (
@@ -762,6 +753,15 @@ export const CaptionEditor: React.FC = () => {
           )}
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-600 text-white px-4 py-2 text-center text-sm sm:text-base">
+          {error}
+          <button className="ml-4 underline" onClick={() => setError('')}>
+            Dismiss
+          </button>
+        </div>
+      )}
     </div>
   );
 };

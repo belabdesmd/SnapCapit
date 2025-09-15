@@ -64,5 +64,8 @@
     "reddit": {
       "enable": true
     }
+  },
+  "media": {
+    "dir": "assets"
   }
 }

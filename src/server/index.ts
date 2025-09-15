@@ -65,20 +65,6 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
 
     let jobId: string | undefined;
 
-    // Create scheduled job if scheduler is available
-    try {
-      const hoursInMs = Number(hours) * 60 * 60 * 1000;
-      const runAt = new Date(Date.now() + hoursInMs);
-      jobId = await scheduler.runJob({
-        name: 'post-best-captions',
-        data: { imageUrl: image },
-        runAt,
-      });
-    } catch (error) {
-      console.error('Error creating scheduled job:', error);
-      res.json({ showToast: 'Warning: Could not schedule automatic caption posting' });
-    }
-
     // Get current user for username in title
     let username: string | undefined;
     try {
@@ -95,7 +81,30 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
 
     // Submit post to Reddit
     const subreddit = await reddit.getCurrentSubreddit();
-    const post = await reddit.submitCustomPost({ title, subredditName: subreddit.name });
+    const post = await reddit.submitCustomPost({
+      title: title,
+      subredditName: subreddit.name,
+      splash: {
+        backgroundUri: image,
+        appIconUri: "logo.png",
+        buttonLabel: "Caption Image!",
+        heading: ""
+      }
+    });
+
+    // Create scheduled job if scheduler is available
+    try {
+      const hoursInMs = Number(hours) * 60 * 60 * 1000;
+      const runAt = new Date(Date.now() + hoursInMs);
+      jobId = await scheduler.runJob({
+        name: 'post-best-captions',
+        data: { imageUrl: image, postId: post.id },
+        runAt,
+      });
+    } catch (error) {
+      console.error('Error creating scheduled job:', error);
+      res.json({ showToast: 'Warning: Could not schedule automatic caption posting' });
+    }
 
     // Create post in services using Context redis
     try {
@@ -125,8 +134,7 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
 // Job: Post Best Captions
 router.post('/internal/job/post-best-captions', async (req, _res) => {
   try {
-    const { imageUrl } = req.body.data;
-    const { postId } = context;
+    const { imageUrl, postId } = req.body.data;
 
     if (!postId) {
       console.error('No postId available in job context');
@@ -192,7 +200,7 @@ router.post('/internal/job/post-best-captions', async (req, _res) => {
         };
 
         // Make API call to generate caption image
-        const response = await fetch('https://generatecaption-o2ufdr3m5a-uc.a.run.app/', {
+        const response = await fetch('https://snapcapit.belfodil.me/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
