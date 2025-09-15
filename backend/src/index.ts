@@ -2,7 +2,7 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Caption } from './types';
-import { Canvas, FabricImage, Rect, Textbox } from 'fabric/node';
+import { Canvas, FabricImage, Rect, Shadow, Textbox } from 'fabric/node';
 
 // -------------------
 // Load environment variables
@@ -40,15 +40,15 @@ app.post('/generateCaption', async (req: Request, res: Response) => {
   const caption: Caption = req.body.caption;
 
   const canvas = new Canvas(undefined, {
-    width: 700,
-    height: 400,
+    width: 730,
+    height: 430,
     devicePixelRatio: 1,
     renderOnAddRemove: false,
   });
 
   // Standard image dimensions (16:9)
-  const targetWidth = 700;
-  const targetHeight = 400; // 16:9 aspect ratio for 700px width
+  const targetWidth = 730;
+  const targetHeight = 430; // 16:9 aspect ratio for 700px width
 
   // Adjust the canvas size to encompass all elements.
   canvas.setDimensions({
@@ -62,9 +62,9 @@ app.post('/generateCaption', async (req: Request, res: Response) => {
     const topText = new Textbox(caption.topExtendedCaption.toUpperCase(), {
       left: targetWidth / 2,
       fill: caption.topExtensionWhite ? 'black' : 'white',
-      fontSize: 32,
+      fontSize: 31,
       width: 700,
-      fontFamily: 'Arial',
+      fontFamily: "sans-serif",
       fontWeight: 'bold',
       originX: 'center',
       originY: 'center',
@@ -94,8 +94,8 @@ app.post('/generateCaption', async (req: Request, res: Response) => {
       left: targetWidth / 2,
       width: 700,
       fill: caption.bottomExtensionWhite ? 'black' : 'white',
-      fontSize: 32,
-      fontFamily: 'Arial',
+      fontSize: 31,
+      fontFamily: "sans-serif",
       fontWeight: 'bold',
       originX: 'center',
       originY: 'center',
@@ -143,17 +143,22 @@ app.post('/generateCaption', async (req: Request, res: Response) => {
       left: targetWidth / 2,
       top: updatedTopBannerHeight,
       fill: 'white',
-      fontSize: 32,
+      fontSize: 31,
       width: 700,
-      fontFamily: 'Arial',
+      fontFamily: "sans-serif",
       fontWeight: 'bold',
       originX: 'center',
       originY: 'center',
       textAlign: 'center',
+      shadow: new Shadow({
+        color: 'rgba(0,0,0,1)', // shadow color
+        blur: 4, // controls softness
+        offsetX: 0, // horizontal shift
+        offsetY: 0, // vertical shift
+      }),
     });
     // If there’s no banner, add a white stroke for contrast.
-    topText.set('top', updatedTopBannerHeight + (topText.textLines.length * 32) / 2 + 10);
-    topText.set({ stroke: 'black', strokeWidth: 2 });
+    topText.set('top', updatedTopBannerHeight + (topText.textLines.length * 32) / 2 + 20);
     canvas.add(topText);
     canvas.renderAll();
   }
@@ -164,18 +169,23 @@ app.post('/generateCaption', async (req: Request, res: Response) => {
       left: targetWidth / 2,
       fill: 'white',
       width: 700,
-      fontSize: 32,
-      fontFamily: 'Arial',
+      fontSize: 31,
+      fontFamily: "sans-serif",
       fontWeight: 'bold',
       originX: 'center',
       originY: 'center',
       textAlign: 'center',
+      shadow: new Shadow({
+        color: 'rgba(0,0,0,1)', // shadow color
+        blur: 4, // controls softness
+        offsetX: 0, // horizontal shift
+        offsetY: 0, // vertical shift
+      }),
     });
     bottomText.set(
       'top',
-      updatedTopBannerHeight + targetHeight - (bottomText.textLines.length * 32) / 2 - 10
+      updatedTopBannerHeight + targetHeight - (bottomText.textLines.length * 32) / 2 - 20
     );
-    bottomText.set({ stroke: 'black', strokeWidth: 2 });
     canvas.add(bottomText);
     canvas.renderAll();
   }
