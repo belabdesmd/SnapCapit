@@ -7,6 +7,7 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
 } from './icons';
+import { Countdown } from './utils';
 
 interface Caption {
   id?: string;
@@ -31,13 +32,14 @@ const USE_DUMMY_DATA = false;
 // Dummy data for testing
 const DUMMY_DATA = {
   username: 'testuser',
-  imageUrl: 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=700&h=400',
+  imageUrl:
+    'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=700&h=400',
   captions: [
     {
       id: '1',
       username: 'otheruser',
       topCaption: 'WHEN YOU REALIZE',
-      bottomCaption: 'IT\'S MONDAY AGAIN',
+      bottomCaption: "IT'S MONDAY AGAIN",
       upvotes: 15,
       userUpvoted: false,
       createdAt: Date.now() - 3600000,
@@ -69,6 +71,7 @@ export const App: React.FC = () => {
   const [currentCaptionIndex, setCurrentCaptionIndex] = useState(0);
   const [currentUsername, setCurrentUsername] = useState<string>('');
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [timeLeft, setTimeLeft] = useState(-999);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [upvoting, setUpvoting] = useState(false);
@@ -107,8 +110,12 @@ export const App: React.FC = () => {
           setImageUrl(DUMMY_DATA.imageUrl);
 
           // Add create mode caption if user doesn't have one
-          const userCaptions = DUMMY_DATA.captions.filter(c => c.username === DUMMY_DATA.username);
-          const otherCaptions = DUMMY_DATA.captions.filter(c => c.username !== DUMMY_DATA.username);
+          const userCaptions = DUMMY_DATA.captions.filter(
+            (c) => c.username === DUMMY_DATA.username
+          );
+          const otherCaptions = DUMMY_DATA.captions.filter(
+            (c) => c.username !== DUMMY_DATA.username
+          );
 
           if (userCaptions.length === 0) {
             setCaptions([
@@ -126,22 +133,23 @@ export const App: React.FC = () => {
           }
         } else {
           // Load from server
-          const [usernameResponse, imageResponse, captionsResponse] = await Promise.all([
+          const [usernameResponse, postResponse, captionsResponse] = await Promise.all([
             fetch('/api/username'),
-            fetch('/api/post/image'),
+            fetch('/api/post'),
             fetch('/api/captions'),
           ]);
 
-          if (!usernameResponse.ok || !imageResponse.ok || !captionsResponse.ok) {
+          if (!usernameResponse.ok || !postResponse.ok || !captionsResponse.ok) {
             throw new Error('Failed to load data');
           }
 
           const usernameData = await usernameResponse.json();
-          const imageData = await imageResponse.json();
+          const postData = await postResponse.json();
           const captionsData = await captionsResponse.json();
 
           setCurrentUsername(usernameData.username);
-          setImageUrl(imageData.imageUrl);
+          setImageUrl(postData.imageUrl);
+          setTimeLeft(postData.timestamp);
 
           const userCaptions = captionsData.captions.filter(
             (c: CaptionWithUpvotes) => c.username === usernameData.username
@@ -173,6 +181,7 @@ export const App: React.FC = () => {
       }
     };
 
+    // Load Data
     loadInitialData();
   }, []);
 
@@ -190,9 +199,11 @@ export const App: React.FC = () => {
     return !!currentCaption?.bottomExtendedCaption;
   };
 
-  const checkTextOverflow = (textArea: HTMLTextAreaElement): { hit2Lines?: boolean; overflown: boolean } => {
+  const checkTextOverflow = (
+    textArea: HTMLTextAreaElement
+  ): { hit2Lines?: boolean; overflown: boolean } => {
     if (!textArea) return { overflown: false };
-    textArea.style.height = "auto";
+    textArea.style.height = 'auto';
 
     const computedStyle = getComputedStyle(textArea);
     const lineHeight = parseFloat(computedStyle.lineHeight);
@@ -266,7 +277,7 @@ export const App: React.FC = () => {
 
       if (USE_DUMMY_DATA) {
         // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Toggle upvote in dummy data
         setCaptions((prev) =>
@@ -315,7 +326,8 @@ export const App: React.FC = () => {
   };
 
   const handleCreateCaption = async () => {
-    const hasContent = newCaption.top || newCaption.bottom || newCaption.topExtended || newCaption.bottomExtended;
+    const hasContent =
+      newCaption.top || newCaption.bottom || newCaption.topExtended || newCaption.bottomExtended;
     if (!hasContent) {
       setError('At least one caption field must be filled');
       return;
@@ -326,7 +338,7 @@ export const App: React.FC = () => {
 
       if (USE_DUMMY_DATA) {
         // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
         // Create dummy caption
         const createdCaption: CaptionWithUpvotes = {
@@ -412,11 +424,16 @@ export const App: React.FC = () => {
     }
 
     switch (field) {
-      case 'top': return currentCaption?.topCaption || '';
-      case 'bottom': return currentCaption?.bottomCaption || '';
-      case 'topExtended': return currentCaption?.topExtendedCaption || '';
-      case 'bottomExtended': return currentCaption?.bottomExtendedCaption || '';
-      default: return '';
+      case 'top':
+        return currentCaption?.topCaption || '';
+      case 'bottom':
+        return currentCaption?.bottomCaption || '';
+      case 'topExtended':
+        return currentCaption?.topExtendedCaption || '';
+      case 'bottomExtended':
+        return currentCaption?.bottomExtendedCaption || '';
+      default:
+        return '';
     }
   };
 
@@ -429,12 +446,14 @@ export const App: React.FC = () => {
 
   const calculateBannerHeight = (text: string) => {
     if (!text) return `${MIN_HEIGHT_1_LINE_VW + BANNER_PADDING_VW}vw`;
-    
+
     // Estimate lines based on text length and viewport width
-    const estimatedCharsPerLine = Math.floor(window.innerWidth / (((BASE_FONT_SIZE_VW * window.innerWidth) / 100) * 0.6));
+    const estimatedCharsPerLine = Math.floor(
+      window.innerWidth / (((BASE_FONT_SIZE_VW * window.innerWidth) / 100) * 0.6)
+    );
     const estimatedLines = Math.ceil(text.length / estimatedCharsPerLine);
     const lines = Math.min(estimatedLines, 2); // Max 2 lines
-    
+
     if (lines > 1) {
       return `${MIN_HEIGHT_2_LINES_VW + BANNER_PADDING_VW}vw`;
     }
@@ -442,16 +461,26 @@ export const App: React.FC = () => {
   };
 
   const getExtensionBgColor = (position: 'top' | 'bottom') => {
-    const isWhite = position === 'top'
-      ? (isCreatingMode ? newCaption.topExtensionWhite : currentCaption?.topExtensionWhite)
-      : (isCreatingMode ? newCaption.bottomExtensionWhite : currentCaption?.bottomExtensionWhite);
+    const isWhite =
+      position === 'top'
+        ? isCreatingMode
+          ? newCaption.topExtensionWhite
+          : currentCaption?.topExtensionWhite
+        : isCreatingMode
+          ? newCaption.bottomExtensionWhite
+          : currentCaption?.bottomExtensionWhite;
     return isWhite ? 'bg-white' : 'bg-black';
   };
 
   const getExtensionTextColor = (position: 'top' | 'bottom') => {
-    const isWhite = position === 'top'
-      ? (isCreatingMode ? newCaption.topExtensionWhite : currentCaption?.topExtensionWhite)
-      : (isCreatingMode ? newCaption.bottomExtensionWhite : currentCaption?.bottomExtensionWhite);
+    const isWhite =
+      position === 'top'
+        ? isCreatingMode
+          ? newCaption.topExtensionWhite
+          : currentCaption?.topExtensionWhite
+        : isCreatingMode
+          ? newCaption.bottomExtensionWhite
+          : currentCaption?.bottomExtensionWhite;
     return isWhite ? 'text-black placeholder-black/50' : 'text-white placeholder-white/50';
   };
 
@@ -484,7 +513,7 @@ export const App: React.FC = () => {
             </div>
 
             {showTopExtension && (
-              <div 
+              <div
                 className={`${getExtensionBgColor('top')} relative flex items-center justify-center`}
                 style={{ height: calculateBannerHeight(getInputValue('topExtended')) }}
               >
@@ -507,7 +536,9 @@ export const App: React.FC = () => {
                   className={`w-full bg-transparent border-none outline-none resize-none m-0 text-center ${getExtensionTextColor('top')} overflow-hidden flex items-center justify-center`}
                   placeholder="EXTENDED TOP CAPTION..."
                   value={getInputValue('topExtended')}
-                  onChange={(e) => handleInputChange('topExtended', e.target.value, topExtendedTextRef)}
+                  onChange={(e) =>
+                    handleInputChange('topExtended', e.target.value, topExtendedTextRef)
+                  }
                   disabled={!isCreatingMode}
                   style={{
                     ...getTextStyle(),
@@ -526,7 +557,7 @@ export const App: React.FC = () => {
 
         {/* Top Extension - View Mode */}
         {!isCreatingMode && showTopExtension && (
-          <div 
+          <div
             className={`${getExtensionBgColor('top')} flex items-center justify-center`}
             style={{ height: calculateBannerHeight(getInputValue('topExtended')) }}
           >
@@ -600,7 +631,7 @@ export const App: React.FC = () => {
 
         {/* Bottom Extension - View Mode */}
         {!isCreatingMode && showBottomExtension && (
-          <div 
+          <div
             className={`${getExtensionBgColor('bottom')} flex items-center justify-center`}
             style={{ height: calculateBannerHeight(getInputValue('bottomExtended')) }}
           >
@@ -620,7 +651,7 @@ export const App: React.FC = () => {
         {isCreatingMode && (
           <div className="relative">
             {showBottomExtension && (
-              <div 
+              <div
                 className={`${getExtensionBgColor('bottom')} relative flex items-center justify-center`}
                 style={{ height: calculateBannerHeight(getInputValue('bottomExtended')) }}
               >
@@ -643,7 +674,9 @@ export const App: React.FC = () => {
                   className={`w-full bg-transparent border-none outline-none resize-none m-0 text-center ${getExtensionTextColor('bottom')} overflow-hidden flex items-center justify-center`}
                   placeholder="EXTENDED BOTTOM CAPTION..."
                   value={getInputValue('bottomExtended')}
-                  onChange={(e) => handleInputChange('bottomExtended', e.target.value, bottomExtendedTextRef)}
+                  onChange={(e) =>
+                    handleInputChange('bottomExtended', e.target.value, bottomExtendedTextRef)
+                  }
                   disabled={!isCreatingMode}
                   style={{
                     ...getTextStyle(),
@@ -694,7 +727,9 @@ export const App: React.FC = () => {
           </span>
           <button
             className="p-2 sm:p-3 bg-[#272729] hover:bg-[#343536] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-[#343536]"
-            onClick={() => setCurrentCaptionIndex(Math.min(captions.length - 1, currentCaptionIndex + 1))}
+            onClick={() =>
+              setCurrentCaptionIndex(Math.min(captions.length - 1, currentCaptionIndex + 1))
+            }
             disabled={currentCaptionIndex === captions.length - 1}
           >
             <ChevronRightIcon className="w-3 h-3 sm:w-5 sm:h-5" />
@@ -702,44 +737,47 @@ export const App: React.FC = () => {
         </div>
 
         {/* Right - Action Button */}
-        <div className="flex-shrink-0">
-          {isCreatingMode ? (
-            <button
-              className="bg-[#FF4500] hover:bg-[#FF5722] disabled:bg-[#FF4500]/50 disabled:cursor-not-allowed text-white px-3 py-2 sm:px-6 sm:py-3 lg:px-8 rounded-full font-medium transition-colors shadow-lg text-xs sm:text-sm lg:text-base flex items-center space-x-2"
-              onClick={handleCreateCaption}
-              disabled={creating}
-            >
-              {creating && (
-                <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              <span>{creating ? 'Creating...' : 'Add Caption'}</span>
-            </button>
-          ) : (
-            <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center gap-4">
+          <Countdown targetTimestamp={timeLeft} />
+          <div className="flex-shrink-0">
+            {isCreatingMode ? (
               <button
-                className={`p-2 sm:p-3 rounded-full transition-colors border flex items-center justify-center ${
-                  isUserCaption
-                    ? 'bg-[#272729] border-[#343536] cursor-not-allowed opacity-50'
-                    : currentCaption?.userUpvoted
-                    ? 'bg-[#FF4500] border-[#FF4500] cursor-pointer'
-                    : 'bg-[#272729] hover:bg-[#FF4500] border-[#343536] hover:border-[#FF4500] cursor-pointer'
-                } ${upvoting ? 'cursor-not-allowed' : ''}`}
-                onClick={handleUpvote}
-                disabled={isUserCaption || upvoting}
+                className="bg-[#FF4500] hover:bg-[#FF5722] disabled:bg-[#FF4500]/50 disabled:cursor-not-allowed text-white px-3 py-2 sm:px-6 sm:py-3 lg:px-8 rounded-full font-medium transition-colors shadow-lg text-xs sm:text-sm lg:text-base flex items-center space-x-2"
+                onClick={handleCreateCaption}
+                disabled={creating}
               >
-                {upvoting ? (
-                  <div className="w-3 h-3 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : currentCaption?.userUpvoted ? (
-                  <ArrowDownIcon className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
-                ) : (
-                  <ArrowUpIcon className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
+                {creating && (
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 )}
+                <span>{creating ? 'Creating...' : `Add Caption` } </span>
               </button>
-              <div className="text-[#D7DADC] font-bold text-xs sm:text-sm lg:text-xl whitespace-nowrap">
-                {currentCaption?.upvotes || 0} upvotes
+            ) : (
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <button
+                  className={`p-2 sm:p-3 rounded-full transition-colors border flex items-center justify-center ${
+                    isUserCaption
+                      ? 'bg-[#272729] border-[#343536] cursor-not-allowed opacity-50'
+                      : currentCaption?.userUpvoted
+                        ? 'bg-[#FF4500] border-[#FF4500] cursor-pointer'
+                        : 'bg-[#272729] hover:bg-[#FF4500] border-[#343536] hover:border-[#FF4500] cursor-pointer'
+                  } ${upvoting ? 'cursor-not-allowed' : ''}`}
+                  onClick={handleUpvote}
+                  disabled={isUserCaption || upvoting}
+                >
+                  {upvoting ? (
+                    <div className="w-3 h-3 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : currentCaption?.userUpvoted ? (
+                    <ArrowDownIcon className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
+                  ) : (
+                    <ArrowUpIcon className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
+                  )}
+                </button>
+                <div className="text-[#D7DADC] font-bold text-xs sm:text-sm lg:text-xl whitespace-nowrap">
+                  {currentCaption?.upvotes || 0} upvotes
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

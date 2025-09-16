@@ -13,6 +13,7 @@ export class PostsServices {
       const postData: Record<string, string> = {
         id: post.id,
         imageUrl: post.imageUrl,
+        deletesAt: post.deletesAt.toString()
       };
 
       // Add jobId if it exists
@@ -47,6 +48,7 @@ export class PostsServices {
         id: postData.id!,
         imageUrl: postData.imageUrl!,
         jobId: postData.jobId,
+        deletesAt: Number.parseInt(postData.deletesAt!),
       };
     } catch (error) {
       console.error(`Error getting post ${postId}:`, error);

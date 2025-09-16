@@ -1,5 +1,12 @@
 import express from 'express';
-import { redis, createServer, context, getServerPort, scheduler, settings } from '@devvit/web/server';
+import {
+  redis,
+  createServer,
+  context,
+  getServerPort,
+  scheduler,
+  settings,
+} from '@devvit/web/server';
 import { reddit } from '@devvit/reddit';
 import { media } from '@devvit/media';
 import { UiResponse } from '@devvit/web/shared';
@@ -84,15 +91,16 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
       subredditName: subreddit.name,
       splash: {
         backgroundUri: image,
-        appIconUri: "logo.png",
-        heading: "The Image is Yours — Caption It"
-      }
+        appIconUri: 'logo.png',
+        heading: 'The Image is Yours — Caption It',
+      },
     });
 
     // Create scheduled job if scheduler is available
+    let hoursInMs;
     try {
       //TODO: const hoursInMs = Number(hours) * 60 * 60 * 1000;
-      const hoursInMs = 3 * 60 * 1000;
+      hoursInMs = 3 * 60 * 1000;
       const runAt = new Date(Date.now() + hoursInMs);
       jobId = await scheduler.runJob({
         name: 'post-best-captions',
@@ -102,11 +110,17 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
     } catch (error) {
       console.error('Error creating scheduled job:', error);
       res.json({ showToast: 'Warning: Could not schedule automatic caption posting' });
+      return;
     }
 
     // Create post in services using Context redis
     try {
-      await PostsServices.createPost(redis, { id: post.id, imageUrl: image, jobId: jobId });
+      await PostsServices.createPost(redis, {
+        id: post.id,
+        imageUrl: image,
+        jobId: jobId,
+        deletesAt: Date.now() + hoursInMs,
+      });
     } catch (error) {
       console.error('Error saving post to Redis:', error);
       // Clean up the Reddit post if we can't save to Redis
@@ -223,7 +237,7 @@ router.post('/internal/job/post-best-captions', async (req, _res) => {
           type: 'image',
         });
         // pause to make sure the image is properly uploaded
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, 3000));
 
         // Submit new post with generated caption image
         const subreddit = await reddit.getCurrentSubreddit();
@@ -231,7 +245,7 @@ router.post('/internal/job/post-best-captions', async (req, _res) => {
           kind: 'image',
           title: `Caption created by u/${caption.username}`,
           subredditName: subreddit.name,
-          imageUrls: [mediaAsset.mediaUrl]
+          imageUrls: [mediaAsset.mediaUrl],
         });
 
         console.log(`Successfully posted caption by ${caption.username}`);
@@ -434,8 +448,8 @@ router.get('/api/captions', async (_req, res): Promise<void> => {
   }
 });
 
-// Get post image URL
-router.get('/api/post/image', async (_req, res): Promise<void> => {
+// Get post
+router.get('/api/post', async (_req, res): Promise<void> => {
   try {
     const { postId } = context;
 
@@ -460,6 +474,7 @@ router.get('/api/post/image', async (_req, res): Promise<void> => {
     res.json({
       status: 'success',
       imageUrl: post.imageUrl,
+      timestamp: post.deletesAt,
     });
   } catch (error) {
     console.error('Error getting post image:', error);
