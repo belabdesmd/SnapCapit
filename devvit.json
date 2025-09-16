@@ -4,10 +4,7 @@
   "post": {
     "dir": "dist/client",
     "entrypoints": {
-      "default": {
-        "entry": "index.html",
-        "height": "tall"
-      }
+      "default": {"entry": "index.html"}
     }
   },
   "server": {

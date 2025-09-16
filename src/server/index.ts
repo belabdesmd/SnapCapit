@@ -1,7 +1,5 @@
 import express from 'express';
-import { redis, createServer, context, getServerPort } from '@devvit/web/server';
-import { scheduler } from '@devvit/web/server';
-import { settings } from '@devvit/web/server';
+import { redis, createServer, context, getServerPort, scheduler, settings } from '@devvit/web/server';
 import { reddit } from '@devvit/reddit';
 import { media } from '@devvit/media';
 import { UiResponse } from '@devvit/web/shared';
@@ -87,14 +85,14 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
       splash: {
         backgroundUri: image,
         appIconUri: "logo.png",
-        buttonLabel: "Caption Image!",
-        heading: ""
+        heading: "The Image is Yours — Caption It"
       }
     });
 
     // Create scheduled job if scheduler is available
     try {
-      const hoursInMs = Number(hours) * 60 * 60 * 1000;
+      //TODO: const hoursInMs = Number(hours) * 60 * 60 * 1000;
+      const hoursInMs = 3 * 60 * 1000;
       const runAt = new Date(Date.now() + hoursInMs);
       jobId = await scheduler.runJob({
         name: 'post-best-captions',
@@ -200,7 +198,7 @@ router.post('/internal/job/post-best-captions', async (req, _res) => {
         };
 
         // Make API call to generate caption image
-        const response = await fetch('https://snapcapit.belfodil.me/', {
+        const response = await fetch('https://snapcap.belfodil.me/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -224,6 +222,8 @@ router.post('/internal/job/post-best-captions', async (req, _res) => {
           url: base64ImageData,
           type: 'image',
         });
+        // pause to make sure the image is properly uploaded
+        await new Promise(r => setTimeout(r, 3000));
 
         // Submit new post with generated caption image
         const subreddit = await reddit.getCurrentSubreddit();
@@ -231,7 +231,7 @@ router.post('/internal/job/post-best-captions', async (req, _res) => {
           kind: 'image',
           title: `Caption created by u/${caption.username}`,
           subredditName: subreddit.name,
-          imageUrls: [mediaAsset.mediaUrl],
+          imageUrls: [mediaAsset.mediaUrl]
         });
 
         console.log(`Successfully posted caption by ${caption.username}`);
