@@ -38,7 +38,7 @@ const DUMMY_DATA = {
     {
       id: '1',
       username: 'otheruser',
-      topCaption: 'WHEN YOU REALIZE',
+      topCaption: "ME: TRIES TO DESCRIBE A SONG TO GOOGLE THAT I DON'T KNOW ITS NAME",
       bottomCaption: "IT'S MONDAY AGAIN",
       upvotes: 15,
       userUpvoted: false,
@@ -199,11 +199,16 @@ export const App: React.FC = () => {
     return !!currentCaption?.bottomExtendedCaption;
   };
 
+  const getTextAreaHeight = (text: string) => {
+      const estimatedCharsPerLine = Math.floor(window.innerWidth / (((BASE_FONT_SIZE_VW * window.innerWidth) / 100) * 0.6));
+      const estimatedLines = Math.ceil(text.length / estimatedCharsPerLine);
+      return estimatedLines > 1 ? `${MIN_HEIGHT_2_LINES_VW}vw` : `${MIN_HEIGHT_1_LINE_VW}vw`;
+  };
+
   const checkTextOverflow = (
     textArea: HTMLTextAreaElement
   ): { hit2Lines?: boolean; overflown: boolean } => {
     if (!textArea) return { overflown: false };
-    textArea.style.height = 'auto';
 
     const computedStyle = getComputedStyle(textArea);
     const lineHeight = parseFloat(computedStyle.lineHeight);
@@ -227,6 +232,7 @@ export const App: React.FC = () => {
     if (!isCreatingMode) return;
 
     const upperValue = value.toUpperCase();
+    console.log("CHANGE")
 
     if (textAreaRef.current) {
       const originalValue = textAreaRef.current.value;
@@ -372,6 +378,7 @@ export const App: React.FC = () => {
           bottomExtensionWhite: newCaption.bottomExtensionWhite,
           createdAt: Date.now(),
         };
+        console.log(newCaption.top);
 
         const response = await fetch('/api/captions/create', {
           method: 'POST',
@@ -542,7 +549,7 @@ export const App: React.FC = () => {
                   disabled={!isCreatingMode}
                   style={{
                     ...getTextStyle(),
-                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
+                    height: getTextAreaHeight(getInputValue('topExtended')),
                     minHeight: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     padding: `${BANNER_PADDING_VW / 2}vw 2vw`,
                     display: 'flex',
@@ -598,7 +605,7 @@ export const App: React.FC = () => {
                   style={{
                     ...getTextStyle(),
                     textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
+                    height: getTextAreaHeight(getInputValue('top')),
                     minHeight: isCreatingMode ? `${MIN_HEIGHT_1_LINE_VW}vw` : 'auto',
                   }}
                 />
@@ -620,7 +627,7 @@ export const App: React.FC = () => {
                   style={{
                     ...getTextStyle(),
                     textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
+                    height: getTextAreaHeight(getInputValue('bottom')),
                     minHeight: isCreatingMode ? `${MIN_HEIGHT_1_LINE_VW}vw` : 'auto',
                   }}
                 />
@@ -680,7 +687,7 @@ export const App: React.FC = () => {
                   disabled={!isCreatingMode}
                   style={{
                     ...getTextStyle(),
-                    height: `${MIN_HEIGHT_1_LINE_VW}vw`,
+                    height: getTextAreaHeight(getInputValue('bottomExtended')),
                     minHeight: `${MIN_HEIGHT_1_LINE_VW}vw`,
                     padding: `${BANNER_PADDING_VW / 2}vw 2vw`,
                     display: 'flex',

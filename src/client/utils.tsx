@@ -18,7 +18,7 @@ export function Countdown({ targetTimestamp }: CountdownProps) {
   }
 
   return (
-    <div className="text-xl font-mono">
+    <div className="font-mono text-xs sm:text-sm lg:text-xl">
       {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s remaining
     </div>
   );

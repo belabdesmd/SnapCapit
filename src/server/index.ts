@@ -36,6 +36,8 @@ router.post('/internal/menu/create-post/:location', async (req, res: Response<Ui
       form: {
         title: 'Create Caption Contest',
         description: 'Upload the image you want subscribers to caption',
+        cancelLabel: "Cancel",
+        acceptLabel: "Upload",
         fields: [
           {
             name: 'image',
@@ -99,8 +101,7 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
     // Create scheduled job if scheduler is available
     let hoursInMs;
     try {
-      //TODO: const hoursInMs = Number(hours) * 60 * 60 * 1000;
-      hoursInMs = 3 * 60 * 1000;
+      hoursInMs = Number(hours) * 60 * 60 * 1000;
       const runAt = new Date(Date.now() + hoursInMs);
       jobId = await scheduler.runJob({
         name: 'post-best-captions',
