@@ -1,4 +1,3 @@
-// Setup Countdown
 import { useEffect, useState } from 'react';
 
 type CountdownProps = { targetTimestamp: number; };
@@ -14,12 +13,12 @@ export function Countdown({ targetTimestamp }: CountdownProps) {
   }, [targetTimestamp]);
 
   if (timeLeft.total <= 0) {
-    return <span>Countdown finished!</span>;
+    return <span className="font-mono text-xs sm:text-sm lg:text-xl">Countdown finished!</span>;
   }
 
   return (
     <div className="font-mono text-xs sm:text-sm lg:text-xl">
-      {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s remaining
+      {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
     </div>
   );
 }

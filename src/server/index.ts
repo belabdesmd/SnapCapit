@@ -28,8 +28,8 @@ const router = express.Router();
 // --------------------------------------------------------
 
 // Menu: Create Post Form Init from Menu Click
-router.post('/internal/menu/create-post/:location', async (req, res: Response<UiResponse>) => {
-  const { location } = req.params;
+router.post('/internal/menu/create-post/:created_by', async (req, res: Response<UiResponse>) => {
+  const { created_by } = req.params;
   res.json({
     showForm: {
       name: 'createPostForm',
@@ -48,14 +48,20 @@ router.post('/internal/menu/create-post/:location', async (req, res: Response<Ui
           {
             name: 'hours',
             label: 'Hours',
-            helpText: 'How many hours to keep the post alive for',
+            helpText: 'How many hours to keep the post alive for. 0 sets the timer into a default 5 minutes.',
             type: 'number',
             required: true,
             defaultValue: 24,
           },
+          {
+            name: 'created_by',
+            label: 'Created By',
+            type: 'string',
+            defaultValue: created_by,
+            disabled: true
+          }
         ],
-      },
-      data: { location: location },
+      }
     },
   });
 });
@@ -63,12 +69,7 @@ router.post('/internal/menu/create-post/:location', async (req, res: Response<Ui
 // Form: Create Post Form
 router.post('/internal/form/create-post', async (req, res: Response<UiResponse>) => {
   try {
-    const { image, hours, location } = req.body;
-
-    if (!image || !hours) {
-      res.json({ showToast: 'Please fill in all required fields' });
-      return;
-    }
+    const { image, hours, created_by } = req.body;
 
     let jobId: string | undefined;
 
@@ -82,7 +83,7 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
 
     // Create post title
     let title = 'Caption this Image';
-    if (location === 'post' && username) {
+    if (created_by === 'user' && username) {
       title += ` - Added by u/${username}`;
     }
 
@@ -101,7 +102,7 @@ router.post('/internal/form/create-post', async (req, res: Response<UiResponse>)
     // Create scheduled job if scheduler is available
     let hoursInMs;
     try {
-      hoursInMs = Number(hours) * 60 * 60 * 1000;
+      hoursInMs = hours != 0 ? Number(Math.abs(hours)) * 60 * 60 * 1000 : 5 * 60 * 1000;
       const runAt = new Date(Date.now() + hoursInMs);
       jobId = await scheduler.runJob({
         name: 'post-best-captions',

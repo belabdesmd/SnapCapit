@@ -6,8 +6,8 @@ import {
   ChevronRightIcon,
   ArrowUpIcon,
   ArrowDownIcon,
-} from './icons';
-import { Countdown } from './utils';
+} from './utils/icons';
+import { Countdown } from './utils/others';
 
 interface Caption {
   id?: string;
@@ -232,7 +232,6 @@ export const App: React.FC = () => {
     if (!isCreatingMode) return;
 
     const upperValue = value.toUpperCase();
-    console.log("CHANGE")
 
     if (textAreaRef.current) {
       const originalValue = textAreaRef.current.value;
@@ -378,7 +377,6 @@ export const App: React.FC = () => {
           bottomExtensionWhite: newCaption.bottomExtensionWhite,
           createdAt: Date.now(),
         };
-        console.log(newCaption.top);
 
         const response = await fetch('/api/captions/create', {
           method: 'POST',
@@ -712,7 +710,7 @@ export const App: React.FC = () => {
       </div>
 
       {/* Bottom Toolbar - Responsive */}
-      <div className="h-16 sm:h-20 bg-[#1A1A1B] border-t border-[#343536] flex items-center justify-between px-2 sm:px-4 lg:px-8">
+      <div className="h-20 sm:h-24 flex-shrink-0 bg-[#1A1A1B] border-t border-[#343536] flex items-center justify-between px-2 sm:px-4 lg:px-8">
         {/* Left - Username with BoltBadge */}
         <div className="flex items-center flex-shrink-0 min-w-0">
           <div className="text-[#D7DADC] font-bold text-sm sm:text-lg lg:text-xl truncate">
@@ -744,8 +742,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Right - Action Button */}
-        <div className="flex items-center gap-4">
-          <Countdown targetTimestamp={timeLeft} />
+        <div className="flex flex-col items-center justify-center gap-2">
           <div className="flex-shrink-0">
             {isCreatingMode ? (
               <button
@@ -785,6 +782,7 @@ export const App: React.FC = () => {
               </div>
             )}
           </div>
+          <Countdown targetTimestamp={timeLeft} />
         </div>
       </div>
 
