@@ -4,7 +4,7 @@
 Upload an image, let the community add captions, vote for the funniest ones, and automatically post the winners.  
 It’s a gamified way to turn any image into a collaborative meme-making challenge.
 
-[![Watch the video](https://img.youtube.com/vi/VqoVGBqG27E/maxresdefault.jpg)](https://youtu.be/VqoVGBqG27E)
+[![Watch the video](https://img.youtube.com/vi/z45NNP7R3Wk/maxresdefault.jpg)](https://youtu.be/z45NNP7R3Wk)
 
 ---
 
